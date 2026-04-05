@@ -163,9 +163,10 @@ func (r *ProjectResource) ImportState(ctx context.Context, req resource.ImportSt
 		resp.Diagnostics.AddError("Import Failed", fmt.Sprintf("Project %s not found", req.ID))
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, types.ObjectType{}.AttributePath(), &ProjectResourceModel{
+	state := ProjectResourceModel{
 		ID:   types.StringValue(p.ID),
 		Name: types.StringValue(p.Name),
 		Slug: types.StringValue(p.Slug),
-	})...)
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

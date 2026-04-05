@@ -383,3 +383,355 @@ func (c *Client) DeleteRole(id string) error {
 	}
 	return nil
 }
+
+// --- User CRUD ---
+
+type User struct {
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+func (c *Client) CreateUser(u *User) (*User, error) {
+	body, status, err := c.do("POST", c.mgmtURL("/users"), u)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create user: %s (status %d)", string(body), status) }
+	var result User
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetUser(id string) (*User, error) {
+	body, status, err := c.do("GET", c.mgmtURL("/users/"+id), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get user: %s (status %d)", string(body), status) }
+	var result User
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) UpdateUser(id string, u *User) (*User, error) {
+	body, status, err := c.do("PATCH", c.mgmtURL("/users/"+id), u)
+	if err != nil { return nil, err }
+	if status != 200 { return nil, fmt.Errorf("update user: %s (status %d)", string(body), status) }
+	var result User
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) DeleteUser(id string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/users/"+id), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("delete user: status %d", status) }
+	return nil
+}
+
+// --- Group CRUD ---
+
+type Group struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug,omitempty"`
+}
+
+func (c *Client) CreateGroup(g *Group) (*Group, error) {
+	body, status, err := c.do("POST", c.mgmtURL("/groups"), g)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create group: %s (status %d)", string(body), status) }
+	var result Group
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetGroup(id string) (*Group, error) {
+	body, status, err := c.do("GET", c.mgmtURL("/groups/"+id), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get group: %s (status %d)", string(body), status) }
+	var result Group
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) DeleteGroup(id string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/groups/"+id), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("delete group: status %d", status) }
+	return nil
+}
+
+// --- Group Member ---
+
+func (c *Client) AddGroupMember(groupID, userID string) error {
+	_, status, err := c.do("POST", c.mgmtURL("/groups/"+groupID+"/members"), map[string]string{"user_id": userID})
+	if err != nil { return err }
+	if status != 200 && status != 201 { return fmt.Errorf("add group member: status %d", status) }
+	return nil
+}
+
+func (c *Client) RemoveGroupMember(groupID, userID string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/groups/"+groupID+"/members/"+userID), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("remove group member: status %d", status) }
+	return nil
+}
+
+// --- User Role ---
+
+func (c *Client) AssignUserRole(userID, roleID string) error {
+	_, status, err := c.do("POST", c.mgmtURL("/users/"+userID+"/roles"), map[string]string{"role_id": roleID})
+	if err != nil { return err }
+	if status != 200 && status != 201 { return fmt.Errorf("assign user role: status %d", status) }
+	return nil
+}
+
+func (c *Client) RemoveUserRole(userID, roleID string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/users/"+userID+"/roles/"+roleID), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("remove user role: status %d", status) }
+	return nil
+}
+
+// --- Group Role ---
+
+func (c *Client) AssignGroupRole(groupID, roleID string) error {
+	_, status, err := c.do("POST", c.mgmtURL("/groups/"+groupID+"/roles"), map[string]string{"role_id": roleID})
+	if err != nil { return err }
+	if status != 200 && status != 201 { return fmt.Errorf("assign group role: status %d", status) }
+	return nil
+}
+
+func (c *Client) RemoveGroupRole(groupID, roleID string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/groups/"+groupID+"/roles/"+roleID), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("remove group role: status %d", status) }
+	return nil
+}
+
+// --- Permission CRUD ---
+
+type Permission struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
+func (c *Client) CreatePermission(p *Permission) (*Permission, error) {
+	body, status, err := c.do("POST", c.mgmtURL("/permissions"), p)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create permission: %s (status %d)", string(body), status) }
+	var result Permission
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetPermission(id string) (*Permission, error) {
+	body, status, err := c.do("GET", c.mgmtURL("/permissions/"+id), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get permission: %s (status %d)", string(body), status) }
+	var result Permission
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) DeletePermission(id string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/permissions/"+id), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("delete permission: status %d", status) }
+	return nil
+}
+
+// --- Role Permission ---
+
+func (c *Client) AssignRolePermission(roleID, permissionID string) error {
+	_, status, err := c.do("PUT", c.mgmtURL("/roles/"+roleID+"/permissions"), map[string]interface{}{"permissions": []string{permissionID}})
+	if err != nil { return err }
+	if status != 200 && status != 201 { return fmt.Errorf("assign role permission: status %d", status) }
+	return nil
+}
+
+func (c *Client) RemoveRolePermission(roleID, permissionID string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/roles/"+roleID+"/permissions/"+permissionID), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("remove role permission: status %d", status) }
+	return nil
+}
+
+// --- Branding ---
+
+type Branding struct {
+	Name            string  `json:"name,omitempty"`
+	LogoURL         *string `json:"logo_url,omitempty"`
+	FaviconURL      *string `json:"favicon_url,omitempty"`
+	PrimaryColor    *string `json:"primary_color,omitempty"`
+	BackgroundColor *string `json:"background_color,omitempty"`
+	TextColor       *string `json:"text_color,omitempty"`
+	ButtonRadius    *string `json:"button_radius,omitempty"`
+	FontFamily      *string `json:"font_family,omitempty"`
+	ThemeMode       *string `json:"theme_mode,omitempty"`
+	LoginLayout     *string `json:"login_layout,omitempty"`
+	SocialPosition  *string `json:"social_position,omitempty"`
+	WelcomeText     *string `json:"welcome_text,omitempty"`
+	SubtitleText    *string `json:"subtitle_text,omitempty"`
+	SupportEmail    *string `json:"support_email,omitempty"`
+	PrivacyURL      *string `json:"privacy_url,omitempty"`
+	TermsURL        *string `json:"terms_url,omitempty"`
+	CustomCSS       *string `json:"custom_css,omitempty"`
+	MFAPolicy       *string `json:"mfa_policy,omitempty"`
+	PasswordMin     *int    `json:"password_min_length,omitempty"`
+	ShowAttribution *bool   `json:"show_attribution,omitempty"`
+}
+
+func (c *Client) UpdateBranding(b *Branding) error {
+	_, status, err := c.do("PATCH", c.platformURL("/tenants/"+c.Tenant), b)
+	if err != nil { return err }
+	if status != 200 { return fmt.Errorf("update branding: status %d", status) }
+	return nil
+}
+
+func (c *Client) GetBranding() (*Branding, error) {
+	body, status, err := c.do("GET", c.platformURL("/tenants/"+c.Tenant), nil)
+	if err != nil { return nil, err }
+	if status != 200 { return nil, fmt.Errorf("get branding: status %d", status) }
+	var result Branding
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+// --- Cloud Account ---
+
+type CloudAccount struct {
+	ID           string            `json:"id"`
+	Name         string            `json:"name"`
+	ProviderType string            `json:"provider_type"`
+	AccessType   string            `json:"access_type,omitempty"`
+	Config       map[string]string `json:"config,omitempty"`
+}
+
+func (c *Client) CreateCloudAccount(a *CloudAccount) (*CloudAccount, error) {
+	body, status, err := c.do("POST", c.mgmtURL("/cloud/accounts"), a)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create cloud account: %s (status %d)", string(body), status) }
+	var result CloudAccount
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetCloudAccount(id string) (*CloudAccount, error) {
+	body, status, err := c.do("GET", c.mgmtURL("/cloud/accounts/"+id), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get cloud account: %s (status %d)", string(body), status) }
+	var result CloudAccount
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) DeleteCloudAccount(id string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/cloud/accounts/"+id), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("delete cloud account: status %d", status) }
+	return nil
+}
+
+// --- Cloud Mapping ---
+
+type CloudMapping struct {
+	ID             string `json:"id"`
+	CloudAccountID string `json:"cloud_account_id"`
+	RoleID         string `json:"role_id"`
+	CloudRole      string `json:"cloud_role"`
+	Description    string `json:"description,omitempty"`
+}
+
+func (c *Client) CreateCloudMapping(m *CloudMapping) (*CloudMapping, error) {
+	body, status, err := c.do("POST", c.mgmtURL("/cloud/mappings"), m)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create cloud mapping: %s (status %d)", string(body), status) }
+	var result CloudMapping
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetCloudMapping(id string) (*CloudMapping, error) {
+	body, status, err := c.do("GET", c.mgmtURL("/cloud/mappings/"+id), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get cloud mapping: %s (status %d)", string(body), status) }
+	var result CloudMapping
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) DeleteCloudMapping(id string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/cloud/mappings/"+id), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("delete cloud mapping: status %d", status) }
+	return nil
+}
+
+// --- SCIM Target ---
+
+type SCIMTarget struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Endpoint string `json:"endpoint"`
+	Token    string `json:"token,omitempty"`
+}
+
+func (c *Client) CreateSCIMTarget(s *SCIMTarget) (*SCIMTarget, error) {
+	body, status, err := c.do("POST", c.mgmtURL("/scim-targets"), s)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create scim target: %s (status %d)", string(body), status) }
+	var result SCIMTarget
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetSCIMTarget(id string) (*SCIMTarget, error) {
+	body, status, err := c.do("GET", c.mgmtURL("/scim-targets/"+id), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get scim target: %s (status %d)", string(body), status) }
+	var result SCIMTarget
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) DeleteSCIMTarget(id string) error {
+	_, status, err := c.do("DELETE", c.mgmtURL("/scim-targets/"+id), nil)
+	if err != nil { return err }
+	if status != 200 && status != 204 && status != 404 { return fmt.Errorf("delete scim target: status %d", status) }
+	return nil
+}
+
+// --- Domain ---
+
+type Domain struct {
+	ID       string `json:"id"`
+	Domain   string `json:"domain"`
+	Type     string `json:"type,omitempty"`
+	Verified bool   `json:"verified"`
+}
+
+func (c *Client) CreateDomain(d *Domain) (*Domain, error) {
+	body, status, err := c.do("POST", c.platformURL("/tenants/"+c.Tenant+"/domain"), d)
+	if err != nil { return nil, err }
+	if status != 201 && status != 200 { return nil, fmt.Errorf("create domain: %s (status %d)", string(body), status) }
+	var result Domain
+	json.Unmarshal(body, &result)
+	return &result, nil
+}
+
+func (c *Client) GetDomain() (*Domain, error) {
+	body, status, err := c.do("GET", c.platformURL("/tenants/"+c.Tenant+"/domain"), nil)
+	if err != nil { return nil, err }
+	if status == 404 { return nil, nil }
+	if status != 200 { return nil, fmt.Errorf("get domain: %s (status %d)", string(body), status) }
+	var result Domain
+	json.Unmarshal(body, &result)
+	return &result, nil
+}

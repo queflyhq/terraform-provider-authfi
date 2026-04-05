@@ -88,6 +88,18 @@ func (p *AuthFIProvider) Resources(_ context.Context) []func() resource.Resource
 		NewApplicationResource,
 		NewConnectionResource,
 		NewRoleResource,
+		NewUserResource,
+		NewGroupResource,
+		NewGroupMemberResource,
+		NewUserRoleResource,
+		NewGroupRoleResource,
+		NewPermissionResource,
+		NewRolePermissionResource,
+		NewBrandingResource,
+		NewCloudAccountResource,
+		NewCloudMappingResource,
+		NewSCIMTargetResource,
+		NewDomainResource,
 	}
 }
 
