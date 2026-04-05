@@ -1,0 +1,10 @@
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+vendor/
